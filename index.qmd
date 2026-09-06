@@ -1,0 +1,14 @@
+---
+title: "E155 Portfolio"
+image: images/headshot.jpg
+about: 
+    template: jolla
+    links:
+      - icon: linkedin
+        text: LinkedIn
+        href: https://www.linkedin.com/in/tifftien/
+      - icon: github
+        text: Github
+        href: https://github.com/TiffanyTTN
+---
+Tiffany Nguyen is an Engineering undergraduate with an Emphasis in Environmental Analysis at [Harvey Mudd College](https://hmc.edu).

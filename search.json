@@ -1,16 +1,86 @@
 [
   {
+    "objectID": "resources.html",
+    "href": "resources.html",
+    "title": "E155 Resources",
+    "section": "",
+    "text": "E155 Course Website"
+  },
+  {
+    "objectID": "labs.html",
+    "href": "labs.html",
+    "title": "E155 Labs",
+    "section": "",
+    "text": "[Work in progress, redo token]"
+  },
+  {
+    "objectID": "labs.html#lab-1-fpga-and-mcu-setup-and-testing",
+    "href": "labs.html#lab-1-fpga-and-mcu-setup-and-testing",
+    "title": "E155 Labs",
+    "section": "",
+    "text": "[Work in progress, redo token]"
+  },
+  {
+    "objectID": "labs.html#lab-2-multiplexed-7-segment-display",
+    "href": "labs.html#lab-2-multiplexed-7-segment-display",
+    "title": "E155 Labs",
+    "section": "Lab 2: Multiplexed 7-Segment Display",
+    "text": "Lab 2: Multiplexed 7-Segment Display\n[Work in progress]"
+  },
+  {
+    "objectID": "labs.html#lab-3-keypad-scanner-introduction",
+    "href": "labs.html#lab-3-keypad-scanner-introduction",
+    "title": "E155 Labs",
+    "section": "Lab 3: Keypad Scanner Introduction",
+    "text": "Lab 3: Keypad Scanner Introduction"
+  },
+  {
+    "objectID": "labs.html#lab-4-digital-audio-introduction",
+    "href": "labs.html#lab-4-digital-audio-introduction",
+    "title": "E155 Labs",
+    "section": "Lab 4: Digital Audio Introduction",
+    "text": "Lab 4: Digital Audio Introduction"
+  },
+  {
+    "objectID": "labs.html#lab-5-interrupts",
+    "href": "labs.html#lab-5-interrupts",
+    "title": "E155 Labs",
+    "section": "Lab 5: Interrupts",
+    "text": "Lab 5: Interrupts"
+  },
+  {
+    "objectID": "labs.html#lab-6-the-internet-of-things-and-serial-peripheral-interface",
+    "href": "labs.html#lab-6-the-internet-of-things-and-serial-peripheral-interface",
+    "title": "E155 Labs",
+    "section": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "text": "Lab 6: The Internet of Things and Serial Peripheral Interface"
+  },
+  {
+    "objectID": "labs.html#lab-7-the-advanced-encryption-standard",
+    "href": "labs.html#lab-7-the-advanced-encryption-standard",
+    "title": "E155 Labs",
+    "section": "Lab 7: The Advanced Encryption Standard",
+    "text": "Lab 7: The Advanced Encryption Standard"
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "E155 Portfolio",
     "section": "",
-    "text": "Tiffany Nguyen is an Engineering undergraduate with an Emphasis in Environmental Analysis at Harvey Mudd College."
+    "text": "Tiffany Nguyen is an Engineering undergraduate with an Emphasis in Environmental Analysis at Harvey Mudd College. Her main interest lies in robotics for extreme environments (climate and space), but particularly for the navgiation of challenging terrains. For example, she worked on a robotics mobility project for space exploration during Summer 2026 and will be continuing it. She has stronger interests in mechanical and software within robotics, but enjoy the challenge to learn the interactions between different works in robotics. She also have an interest in human-robot interactions (HRI) and was able to work with Harvey Mudd College’s CACTI Lab research lab from Spring 2025 to Fall 2025, which engages in human-centered design (HCD) by working at the intersection of climate, computer science, and disabilities. By pursuing her interests, she hopes to engage in impactful engineering where robotics can support humans in navigating challenges and exploring possibilities."
   },
   {
     "objectID": "blog.html",
     "href": "blog.html",
     "title": "E155 Blog",
     "section": "",
-    "text": "Hello Quarto\n\n\nWelcome to my Quarto portfolio\n\n\n\n\n\nSep 1, 2026\n\n\nTiffany Nguyen\n\n\n\n\n\nNo matching items"
+    "text": "Welcome! Click each box to view all my posts created throughout my experience in E155 Fall 2026.\n\n\n\n\n\n\n\n\n\n\n\n\nWeek 1 Reflection\n\n\nE155 Goals\n\n\n\nTiffany Nguyen\n\n\nSep 1, 2026\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "posts/first-post.html",
+    "href": "posts/first-post.html",
+    "title": "Week 1 Reflection",
+    "section": "",
+    "text": "For the Fall 2026 MicroPs semester, my goals are to improve my hardware electronic skills and being able to more efficiently read datasheets. I would also like to get more familiar with using GitHub as I have not yet had extensive experience with it. With the final project, I aim to apply skills I learned through the labs and potentially learn new skills to create something creative but also challenging."
   }
 ]

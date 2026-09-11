@@ -3,6 +3,8 @@ title: "E155 Blog"
 listing:
   contents: posts
   sort: "date desc"
-  type: default
+  type: grid
   categories: false
 ---
+
+Welcome! Click each box to view all my posts created throughout my experience in E155 Fall 2026.

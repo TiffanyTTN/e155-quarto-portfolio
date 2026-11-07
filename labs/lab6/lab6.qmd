@@ -1,0 +1,6 @@
+---
+title: "Lab 6: The Internet of Things and Serial Peripheral Interface"
+description: "E155 MCU Lab"
+author: "Tiffany Nguyen"
+draft: false
+---

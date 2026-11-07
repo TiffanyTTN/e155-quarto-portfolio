@@ -1,0 +1,573 @@
+---
+title: "Lab 4: Digital Audio Introduction"
+description: "E155 MCU Lab"
+author: "Tiffany Nguyen"
+draft: false
+---
+
+## Hardware 
+The list of components used included: 
+
+- 1x STM32L432KC MCU 
+- 1x LM386 audio amplifier 
+- 1x 8-ohm speaker 
+- 1x 10 kohms potentiometer 
+- 1x 220 microF electrolytic capacitor 
+- 1x 0.05 microF ceramic capacitor
+- 1x 10 ohms resistor 
+
+Resources used for hardware connections included:
+
+- [LM386 Low Voltage Audio Power Amplifier Datasheet](https://www.ti.com/lit/ds/symlink/lm386.pdf)
+- [STM32L432KC MCU Datasheet](https://hmc-e155.github.io/assets/doc/ds11451-stm32l432kc.pdf)
+- [E155 Development Board](https://hmc-e155.github.io/assets/doc/E155%20Development%20Board%20Schematic.pdf)
+
+
+## Software
+The following resources were used:
+
+- [MCU Reference Manual](https://hmc-e155.github.io/assets/doc/rm0394-stm32l41xxx42xxx43xxx44xxx45xxx46xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf)
+- [MCU Programmer Manual](https://hmc-e155.github.io/assets/doc/pm0214-stm32-cortexm4-mcus-and-mpus-programming-manual-stmicroelectronics.pdf) for primarily information on SysTick
+- [E155 Tutorial Clock Configuration](https://github.com/HMC-E155/tutorial-clock-configuration) 
+
+Files for Lab 4 included "main.c" and "peripherals.h". 
+
+<details>
+<summary>Reveal C Code: main.c</summary>
+```c
+/*********************************************************************
+*                    SEGGER Microcontroller GmbH                     *
+*                        The Embedded Experts                        *
+**********************************************************************
+
+-------------------------- END-OF-HEADER -----------------------------
+
+File    : main.c
+Purpose : Generic application start
+
+*/
+
+#include <stdio.h>
+#include "peripherals.h"
+
+// Lab-Specific Hardware Configuration Macros
+#define SPEAKER_PIN       3   // Assigned output on Port B (corresponds to D13 board mapping)
+#define NOTE_GAP_MS       15  // Quiet window interval between consecutive pitch changes
+#define PLAYBACK_TRACK    0   // Mux selector: 1 = Für Elise, 0 = Ode to Joy
+
+// Volatile global tracking variable
+volatile uint32_t globalMillisecondsCounter = 0;
+
+// ============================================================================
+// 1. Music Composition Arrays (Pitches in Hz, Durations in ms)
+// ============================================================================
+const int notes_fur_elise[][2] = {
+{659,	125},
+{623,	125},
+{659,	125},
+{623,	125},
+{659,	125},
+{494,	125},
+{587,	125},
+{523,	125},
+{440,	250},
+{  0,	125},
+{262,	125},
+{330,	125},
+{440,	125},
+{494,	250},
+{  0,	125},
+{330,	125},
+{416,	125},
+{494,	125},
+{523,	250},
+{  0,	125},
+{330,	125},
+{659,	125},
+{623,	125},
+{659,	125},
+{623,	125},
+{659,	125},
+{494,	125},
+{587,	125},
+{523,	125},
+{440,	250},
+{  0,	125},
+{262,	125},
+{330,	125},
+{440,	125},
+{494,	250},
+{  0,	125},
+{330,	125},
+{523,	125},
+{494,	125},
+{440,	250},
+{  0,	125},
+{494,	125},
+{523,	125},
+{587,	125},
+{659,	375},
+{392,	125},
+{699,	125},
+{659,	125},
+{587,	375},
+{349,	125},
+{659,	125},
+{587,	125},
+{523,	375},
+{330,	125},
+{587,	125},
+{523,	125},
+{494,	250},
+{  0,	125},
+{330,	125},
+{659,	125},
+{  0,	250},
+{659,	125},
+{1319,	125},
+{  0,	250},
+{623,	125},
+{659,	125},
+{  0,	250},
+{623,	125},
+{659,	125},
+{623,	125},
+{659,	125},
+{623,	125},
+{659,	125},
+{494,	125},
+{587,	125},
+{523,	125},
+{440,	250},
+{  0,	125},
+{262,	125},
+{330,	125},
+{440,	125},
+{494,	250},
+{  0,	125},
+{330,	125},
+{416,	125},
+{494,	125},
+{523,	250},
+{  0,	125},
+{330,	125},
+{659,	125},
+{623,	125},
+{659,	125},
+{623,	125},
+{659,	125},
+{494,	125},
+{587,	125},
+{523,	125},
+{440,	250},
+{  0,	125},
+{262,	125},
+{330,	125},
+{440,	125},
+{494,	250},
+{  0,	125},
+{330,	125},
+{523,	125},
+{494,	125},
+{440,	500},
+{  0,	0}};
+
+const int notes_ode_to_joy[][2] = {
+    {330, 250}, {330, 250}, {349, 250}, {392, 250}, {392, 250}, {349, 250},
+    {330, 250}, {294, 250}, {262, 250}, {262, 250}, {294, 250}, {330, 250},
+    {330, 375}, {294, 125}, {294, 500}, {0,   125}, {0,   0}
+};
+
+// ============================================================================
+// 2. Local Functions
+// ============================================================================
+
+void updateAudioFrequency(int frequency) {
+    // Avoid zero or inverted frequencies to prevent division faults
+    if (frequency <= 0) {
+        TIM2->CR1 &= ~TIM_CR1_CEN;     // Halt count engine
+        digitalWrite(SPEAKER_PIN, GPIO_LOW); // Flatline output to fully eliminate speaker coil noise
+        return;
+    }
+    
+    TIM2->CR1 &= ~TIM_CR1_CEN;         // Freeze timer temporarily to change configuration parameters
+    
+    // Half-Period Auto-Reload Register Math: ARR = (Timer Clock Frequency / (2 * Frequency)) - 1
+    // Timer frequency is exactly 1 MHz because the driver sets the prescaler to 15 (16MHz / 16)
+    uint32_t arr_value = (1000000 / (2 * (uint32_t)frequency)) - 1;
+    
+    TIM2->ARR = arr_value;
+    TIM2->CNT = 0;                     // Clear stale loop cycle values
+    TIM2->EGR |= TIM_EGR_UG;           // Force immediate latch shadow reloads
+    TIM2->SR  &= ~TIM_SR_UIF;          // Clear outstanding update flags
+    TIM2->CR1 |= TIM_CR1_CEN;          // Re-engage countdown audio oscillator engine
+}
+
+void executionDelayMs(uint32_t ms) {
+    uint32_t initial_timestamp = globalMillisecondsCounter;
+    // Protect code against global counter variable overflow scenarios
+    while ((globalMillisecondsCounter - initial_timestamp) < ms);
+}
+
+// ============================================================================
+// 3. Exception Vector Targets
+// ============================================================================
+
+void SysTick_Handler(void) {
+    globalMillisecondsCounter++; // Short, non-blocking asynchronous time heartbeat
+}
+
+void TIM2_IRQHandler(void) {
+    if (TIM2->SR & TIM_SR_UIF) {
+        TIM2->SR &= ~TIM_SR_UIF;       // Acknowledge milestone and reset update flag manually
+        togglePin(SPEAKER_PIN);        // Execute portable inline toggle command
+    }
+}
+
+// ============================================================================
+// 4. Main Loop
+// ============================================================================
+
+int main(void) {
+    // Generic hardware driver blocks from peripherals.h
+    driverSystemClockInit16MHz();
+    driverSysTickInit();
+    
+    // Initialize Timer 2 with a prescaler of 15 (creates a clean 1 MHz clock baseline from 16 MHz HSI)
+    driverTimer2InterruptInit(15);
+    
+    // Configure target pins using GPIO
+    pinMode(SPEAKER_PIN, GPIO_OUTPUT);
+    
+    // Resolve score pointer references based on selection constraints (used to choose which notes to play)
+    const int (*active_score)[2] = (PLAYBACK_TRACK == 1) ? notes_ode_to_joy : notes_fur_elise; // PLAYBACK_TRACK Mux selector: 1 = Für Elise, 0 = Ode to Joy
+    int current_note_idx = 0;
+    
+    while (1) {
+        int pitch    = active_score[current_note_idx][0];
+        int duration = active_score[current_note_idx][1];
+        
+        // Check for composition matrix structural termination flag {0, 0}
+        if (duration == 0) {
+            break; 
+        }
+        
+        // Forward parameters down to safe configuration helpers
+        updateAudioFrequency(pitch);
+        executionDelayMs(duration);
+        
+        // Enforce brief silent guard window to make adjacent matching notes sound good
+        TIM2->CR1 &= ~TIM_CR1_CEN;
+        digitalWrite(SPEAKER_PIN, GPIO_LOW);
+        executionDelayMs(NOTE_GAP_MS);
+        
+        current_note_idx++;
+    }
+    
+    // Cleanly isolate speaker load and enter a safe lock state upon song completion
+    TIM2->CR1 &= ~TIM_CR1_CEN;
+    digitalWrite(SPEAKER_PIN, GPIO_LOW);
+    while (1) {
+        // Idle halt state
+    }
+}
+/*************************** End of file ****************************/
+```
+</details>
+
+
+<details>
+<summary>Reveal C Code: peripherals.h</summary>
+```c
+/* RESOURCES:
+- tutorial-clock-configuration starter code: STM32L432KC_RCC.h / RCC.c (RCC for TIM2)
+                                             STM32L432KC_GPIO.h / GPIO.c (for TIM2, SysTick, GPIO)
+- STM32L432KC reference manual, programming manual
+*/
+
+// peripherals.h
+// Attempted to design code to be portable / can be dropped into another lab unmodified
+
+#ifndef PERIPHERALS_H
+#define PERIPHERALS_H
+
+#include <stdint.h>
+
+#define __IO volatile
+
+
+// ============================================================================
+// Definitions
+// ============================================================================
+
+//=========Memory Maps & Base Offsets=======
+#define RCC_BASE      (0x40021000) // Base address for Reset and Clock Control (RCC)
+#define GPIOB_BASE    (0x48000400) // Base address for GPIO Port B
+#define TIM2_BASE     (0x40000000) // Base address for Timer 2 (Core timer peripheral) (from RM Section 2.2.2 Table 2)
+
+// Private Peripheral Bus (PPB) Core Spaces (Reference: Cortex-M4 Device User Guide)
+#define NVIC_BASE     (0xE000E100) // Nested Vectored Interrupt Controller Base
+#define SYSTICK_BASE  (0xE000E010) // Core SysTick time register block (from PM Section 4.5 Table 54)
+
+//===========Descriptive Peripheral Hardware Typedef Layouts============= 
+
+// For RCC (from STM_RCC.h tutorial code)
+typedef struct {
+    __IO uint32_t CR;          // Offset 0x00 Clock control register
+    __IO uint32_t ICSCR;       // 0x04 Internal clock sources calibration register
+    __IO uint32_t CFGR;        // 0x08 Clock configuration register
+    __IO uint32_t PLLCFGR;     // 0x0C System PLL configuration register
+    __IO uint32_t PLLSAI1CFGR; // 0x10 PLL SAI1 configuration register
+    uint32_t      RESERVED;    // 0x14 Reserved
+    __IO uint32_t CIER;        // 0x18 Clock interrupt enable register
+    __IO uint32_t CIFR;        // 0x1C Clock interrupt flag register
+    __IO uint32_t CICR;        // 0x20 Clock interrupt clear register
+    uint32_t      RESERVED0;   // 0x24 Reserved
+    __IO uint32_t AHB1RSTR;    // 0x28 AHB1 peripheral reset register
+    __IO uint32_t AHB2RSTR;    // 0x2C AHB2 peripheral reset register
+    __IO uint32_t AHB3RSTR;    // 0x30 AHB3 peripheral reset register
+    uint32_t      RESERVED1;   // 0x34 Reserved
+    __IO uint32_t APB1RSTR1;   // 0x38 APB1 peripheral reset register 1
+    __IO uint32_t APB1RSTR2;   // 0x3C APB1 peripheral reset register 2
+    __IO uint32_t APB2RSTR;    // 0x40 APB2 peripheral reset register
+    uint32_t      RESERVED2;   // 0x44 Reserved
+    __IO uint32_t AHB1ENR;     // 0x48 AHB1 peripheral clocks enable register
+    __IO uint32_t AHB2ENR;     // 0x4C AHB2 peripheral clocks enable register
+    __IO uint32_t AHB3ENR;     // 0x50 AHB3 peripheral clocks enable register
+    uint32_t      RESERVED3;   // 0x54 Reserved
+    __IO uint32_t APB1ENR1;    // 0x58 APB1 peripheral clocks enable register 1
+    __IO uint32_t APB1ENR2;    // 0x5C APB1 peripheral clocks enable register 2
+    __IO uint32_t APB2ENR;     // 0x60 APB2 peripheral clocks enable register
+    uint32_t      RESERVED4;   // Reserved,                                                                Address offset: 0x64 */
+    __IO uint32_t AHB1SMENR;   // RCC AHB1 peripheral clocks enable in sleep and stop modes register,      Address offset: 0x68 */
+    __IO uint32_t AHB2SMENR;   // RCC AHB2 peripheral clocks enable in sleep and stop modes register,      Address offset: 0x6C */
+    __IO uint32_t AHB3SMENR;   // RCC AHB3 peripheral clocks enable in sleep and stop modes register,      Address offset: 0x70 */
+    uint32_t      RESERVED5;   // Reserved,                                                                Address offset: 0x74 */
+    __IO uint32_t APB1SMENR1;  // RCC APB1 peripheral clocks enable in sleep mode and stop modes register 1, Address offset: 0x78 */
+    __IO uint32_t APB1SMENR2;  // RCC APB1 peripheral clocks enable in sleep mode and stop modes register 2, Address offset: 0x7C */
+    __IO uint32_t APB2SMENR;   // RCC APB2 peripheral clocks enable in sleep mode and stop modes register, Address offset: 0x80 */
+    uint32_t      RESERVED6;   // Reserved,                                                                Address offset: 0x84 */
+    __IO uint32_t CCIPR;       // RCC peripherals independent clock configuration register,                Address offset: 0x88 */
+    uint32_t      RESERVED7;   // Reserved,                                                                Address offset: 0x8C */
+    __IO uint32_t BDCR;        // RCC backup domain control register,                                      Address offset: 0x90 */
+    __IO uint32_t CSR;         // RCC clock control & status register,                                     Address offset: 0x94 */
+    __IO uint32_t CRRCR;       // RCC clock recovery RC register,  
+} RCC_TypeDef;
+
+// For GPIO register structs (from STM_GPIO.h tutorial code)
+typedef struct {
+    volatile uint32_t MODER;   // GPIO Offset 0x00 GPIO port mode register
+    volatile uint32_t OTYPER;  // GPIO Offset 0x04
+    volatile uint32_t OSPEEDR; // GPIO Offset 0x08
+    volatile uint32_t PURPDR;  // GPIO Offset 0x0C
+    volatile uint32_t IDR;     // GPIO Offset 0x10
+    volatile uint32_t ODR;     // GPIO Offset 0x14
+    volatile uint32_t BSRR;    // GPIO Offset 0x18
+    volatile uint32_t LCKR;    // GPIO Offset 0x1C
+    volatile uint32_t AFRL;    // GPIO Offset 0x20
+    volatile uint32_t AFRH;    // GPIO Offset 0x24
+} GPIO_TypeDef;
+
+// For TIM2
+typedef struct {
+    volatile uint32_t CR1;     // Offset 0x00 Control register 1
+    volatile uint32_t CR2;     // 0x04 Control register 2
+    volatile uint32_t SMCR;    // 0x08 Slave mode control register
+    volatile uint32_t DIER;    // 0x0C DMA/Interrupt enable register
+    volatile uint32_t SR;      // 0x10 Status register
+    volatile uint32_t EGR;     // 0x14 Event generation register
+    volatile uint32_t CCMR1;   // 0x18 Capture/compare mode register 1
+    volatile uint32_t CCMR2;   // 0x1C Capture/compare mode register 2
+    volatile uint32_t CCER;    // 0x20 Capture/compare enable register
+    volatile uint32_t CNT;     // 0x24 Counter register
+    volatile uint32_t PSC;     // 0x28 Prescaler register
+    volatile uint32_t ARR;     // 0x2C Auto-reload register
+} TIM_TypeDef;
+
+// For SysTick register structs 
+typedef struct {
+    volatile uint32_t CTRL;    // Offset 0x00 SysTick Control and Status Register
+    volatile uint32_t LOAD;    // 0x04 SysTick Reload Value Register
+    volatile uint32_t VAL;     // 0x08 SysTick Current Value Register
+    volatile uint32_t CALIB;  // 0x0C Calibration Value Register
+
+} SysTick_TypeDef;
+
+typedef struct {
+    volatile uint32_t ISER[8]; // 0x00 Interrupt Set-Enable Registers Array
+} NVIC_TypeDef;
+
+// Instance Mapping Pointers 
+#define RCC          ((RCC_TypeDef *) RCC_BASE)
+#define GPIOB        ((GPIO_TypeDef *) GPIOB_BASE)
+#define TIM2         ((TIM_TypeDef *) TIM2_BASE) // Pointers to TIM2-sized chunks of memory for each peripheral
+#define SysTick_Core ((SysTick_TypeDef *) SYSTICK_BASE)
+#define NVIC_Core    ((NVIC_TypeDef *) NVIC_BASE)
+
+//==========Functional Parameter Macros (Reference: RM)======
+#define RCC_CR_HSION          (1 << 8)   // High-Speed Internal enable
+#define RCC_CR_HSIRDY         (1 << 10)  // HSI16 stability ready flag
+#define RCC_AHB2ENR_GPIOBEN   (1 << 1)   // GPIOB clock gating enable bit
+#define RCC_APB1ENR1_TIM2EN   (1 << 0)   // TIM2 clock gating enable bit
+
+#define SW_HSI16              1          // HSI16 system source clock token
+#define HPRE_DIV1             0          // No AHB prescaler division configuration
+
+// Standardized GPIO Abstractions
+#define GPIO_LOW              0
+#define GPIO_HIGH             1
+
+#define GPIO_INPUT            0
+#define GPIO_OUTPUT           1
+#define GPIO_ALT              2
+#define GPIO_ANALOG           3
+
+#define TIM_CR1_CEN           (1 << 0)   // Counter Enable Bit
+#define TIM_DIER_UIE          (1 << 0)   // Update Interrupt Enable Bit
+#define TIM_SR_UIF            (1 << 0)   // Update Interrupt Status Flag
+#define TIM_EGR_UG            (1 << 0)   // Update Generation Latch Trigger
+
+#define SYSTICK_ENABLE        (1 << 0)   // Enable core counter ticking module
+#define SYSTICK_TICKINT       (1 << 1)   // Trigger core exception vector on rollover
+#define SYSTICK_CLKSRC        (1 << 2)   // Select internal processor core clock as source
+#define NVIC_TIM2_IRQ_POS     28           // TIM2 Global Exception Vector position
+
+// Target Frequency Baseline constant for internal math calculations
+#define SYSTEM_CLOCK_FREQ     16000000
+
+// ============================================================================
+// Function Prototypes
+// ============================================================================
+// --- Core RCC Speed Drivers ---
+static inline void driverSystemClockInit16MHz(void) {
+    RCC->CR |= RCC_CR_HSION;
+    while (!(RCC->CR & RCC_CR_HSIRDY)); 
+    
+    uint32_t cfg_temp = RCC->CFGR;
+    cfg_temp &= ~(0x3 << 0);
+    cfg_temp |= SW_HSI16;
+    RCC->CFGR = cfg_temp;
+    while (((RCC->CFGR >> 2) & 0x3) != SW_HSI16);
+    
+    uint32_t hpre_temp = RCC->CFGR;
+    hpre_temp &= ~(0xF << 4);
+    hpre_temp |= (HPRE_DIV1 << 4);
+    RCC->CFGR = hpre_temp;
+}
+
+// --- General Purpose I/O Port B Drivers ---
+
+// From GPIO.c tutorial code
+static inline void pinMode(int pin, int function) {
+    switch(function) {
+        case GPIO_INPUT:
+            GPIOB->MODER &= ~(0b11 << (2 * pin));
+            break;
+        case GPIO_OUTPUT:
+            GPIOB->MODER |= (0b1 << (2 * pin));
+            GPIOB->MODER &= ~(0b1 << (2 * pin + 1));
+            break;
+        case GPIO_ALT:
+            GPIOB->MODER &= ~(0b1 << (2 * pin));
+            GPIOB->MODER |= (0b1 << (2 * pin + 1));
+            break;
+        case GPIO_ANALOG:
+            GPIOB->MODER |= (0b11 << (2 * pin));
+            break;
+    }
+}
+
+// From GPIO.c tutorial code
+static inline void digitalWrite(int pin, int val) {
+    if (val == GPIO_HIGH) {
+        GPIOB->ODR |= (1 << pin);
+    } else {
+        GPIOB->ODR &= ~(1 << pin);
+    }
+}
+
+// From GPIO.c tutorial code
+static inline void togglePin(int pin) {
+    GPIOB->ODR ^= (1 << pin);
+}
+
+// From GPIO.c tutorial code
+static inline int digitalRead(int pin) {
+    return (int)((GPIOB->IDR >> pin) & 1);
+}
+
+// --- Generic Time and Interrupt Peripherals Configurations ---
+static inline void driverSysTickInit(void) {
+    SysTick_Core->CTRL = 0;                                       
+    SysTick_Core->LOAD = (SYSTEM_CLOCK_FREQ / 1000) - 1;             
+    SysTick_Core->VAL  = 0;                                       
+    SysTick_Core->CTRL = (SYSTICK_CLKSRC | SYSTICK_TICKINT | SYSTICK_ENABLE); 
+}
+
+static inline void driverTimer2InterruptInit(uint16_t prescalerValue) {
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;  
+    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN; 
+    
+    TIM2->PSC = prescalerValue;                                               
+    TIM2->DIER |= TIM_DIER_UIE;                                   
+    
+    // Set enable state safely inside the indexed array layout matrix
+    NVIC_Core->ISER[NVIC_TIM2_IRQ_POS >> 5] |= (1 << (NVIC_TIM2_IRQ_POS & 0x1F));
+}
+
+#endif 
+```
+</details>
+
+
+
+## Calculations
+
+Documentation and calculations for pitches related to timer configuration: Pitch Generation Math (TIM2)
+
+1. To generate a pure square-wave tone at a specific target pitch frequency $f_{pitch}$, the microcontroller pin must toggle twice per complete wave period (once from low-to-high, and once from high-to-low). Therefore, the timer update interrupt frequency $f_{interrupt}$ must be double the target pitch frequency: $f_{interrupt}$ = $2 \times f_{pitch}$.
+2. From MCU reference manual for timers, $f_{interrupt} = \frac{f_{clk}}{(PSC + 1)(ARR + 1)}$. Plugging in $f_{interrupt}$ = $2 \times f_{pitch}$, PSC = 15, $f_{clk} = 16 MHz$, the equation can be rearranged to get $ARR = (\frac{1,000,000}{2 \times f_{pitch}}) - 1$. 
+
+Documentation and calculations for duration related to timer configuration: Note Duration Math (SysTick)
+
+1. The system clock baseline is set to 16 MHz (16,000,000 ticks/second). To achieve a continuous 1 ms hardware time heartbeat, the reload threshold register (LOAD) is computed as: $LOAD = (\frac{f_{clk}}{1000}) -1 = (\frac{16,000,000}{1000}) - 1 = 15,999$. 
+2. This means that every 16,000,000 clock cycles, the SysTick timer rolls over and increments the global counter "globalMillisecondsCounter" inside the asynchronous SysTick_Handler of the code by exactly 1, which allows the linear duration math loop to match a clock time in milliseconds. 
+
+Accuracy Analysis for 220 Hz Pitch: 
+
+1. For an ideal float evaluation, the ARR equation can be used. Plugging in $f_{pitch}$ = 220 Hz, $ARR_{ideal} = (\frac{1,000,000}{2 \times 220}) - 1 = (\frac{1,000,000}{440}) - 1 = 2271.727$. 
+2. As an integer for hardware, $ARR_{actual} = 2271$. 
+3. An audio tone requires a full, completed wave cycle (going HIGH and then going back LOW). So, there are two interrupts: (1) toggling the pin from LOW to HIGH (creating the first half of the wave) and (2) toggling the pin from HIGH to LOW (creating the second half of the wave). Because it takes two distinct interrupts to make one full sound wave period, the frequency of the actual pitch $f_{actual}$ is half the interrupt frequency: $f_{actual} = \frac{f_{interrupt}}{2} = \frac{1,000,000}{2 \times (ARR +1)}$. 
+4. Plugging in $ARR_{actual}$ in $f_{actual}$ equation, $f_{actual} = \frac{1,000,000}{2 \times (2271 +1)} \approx 220.0704 Hz$.
+5. The accuracy error percentage calculation in this case is then $Error = |\frac{220.0704 - 220}{220}| \times 100 \% \approx 0.032 \%$, which is below the max 1% error threshold limit. 
+
+Accuracy Analysis for 1000 Hz Pitch: 
+
+1. For an ideal float evaluation, the ARR equation can be used. Plugging in $f_{pitch}$ = 1000 Hz, $ARR_{ideal} = (\frac{1,000,000}{2 \times 1000}) - 1 = (\frac{1,000,000}{2000}) - 1 = 499$. 
+2. As an integer for hardware, $ARR_{actual} = 499$. 
+3. Recall that equation for the actual resulting output frequency is $f_{actual} = \frac{f_{interrupt}}{2} = \frac{1,000,000}{2 \times (ARR +1)}$. 
+4. Plugging in $ARR_{actual}$ in $f_{actual}$ equation, $f_{actual} = \frac{1,000,000}{2 \times (499 +1)} = 1000 Hz$.
+5. The accuracy error percentage calculation in this case is then $Error = |\frac{1000 - 1000}{1000}| \times 100 \% = 0.0 \%$, which is below the max 1% error threshold limit. 
+
+
+## Schematic
+
+Referred to Figure 9-1. LM386 with Gain = 20 to assist in creating the Lab 4 circuit schematic. A 220 microF capacitor was used instead of 250 microF due to availability of capacitors. 
+
+
+<details>
+<summary>Lab 4 Schematic: Digital Audio</summary>
+[View PDF](images/e155_lab4_schematics.pdf)
+</details>
+
+## Conclusion
+Number of hours spent working on the lab: at least 20 hours
+
+By the end of the hours worked, the design requirements were met. However, improvements can be made to computing more calculations. Learning challenges along the way included learning how to read the MCU reference manual to look for wanted information and how to code for the wanted functions. 
+
+## AI Prototype
+LLM Prompt: What timers should I use on the STM32L432KC to generate frequencies ranging from 220Hz to 1kHz? What’s the best choice of timer if I want to easily connect it to a GPIO pin? What formulae are relevant, and what registers need to be set to configure them properly?
+
+After prompting the LLM (Google Gemini) with the given prompt, it recommended to use the general-purpose timer TIM2 as the best option, or TIM15/TIM16 in PWM Mode 1 to to generate frequencies from 220 Hz to 1 kHz directly on a GPIO pin without CPU overhead. It also mentioned to avoid basic timers, such as TIM6 and TIM7, because they lack hardware output channels and cannot drive GPIO pins directly. To support its results, it referred to STMicroelectronics's STM32L432KC resources and provided an example of easy GPIO connections for TIM2 and TIM15/TIM16. It also showed relevant formulas including the counter tick frequency, output PWM frequency, duty cycle via the Capture/Compare Register (CCRx). An example calculation then followed for when PSC = 3 such that the timer ticks cleanly at 1 MHz. More registers were provided and what the bits for each of them mean. After providing the same prompt but with the E155's STM32L432KC reference manual, the same results were given. 
+
+Compared to my own read of the reference manual, the LLM was much faster in identifying and describing details, along with providing examples. This then makes it much quicker and easier to look for specific details than using Ctrl-F in the reference manual because the LLM summarizes information based on the provided prompt. I would then rate the quality of the output a 6/10 because it led to similar conclusions that I had when reviewing the reference manual. However, it only provided general resources on how it got its information and no specifications on which sections of the resources it was referring to to support its output. When reviewing the reference manual on my own, I try to document which sections I am referring to so its easier to look back at them later. 

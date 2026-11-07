@@ -1,0 +1,6 @@
+---
+title: "Lab 3: Keypad Scanner Introduction"
+description: "E155 FPGA Lab"
+author: "Tiffany Nguyen"
+draft: false
+---

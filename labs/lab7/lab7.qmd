@@ -1,0 +1,6 @@
+---
+title: "Lab 7: The Advanced Encryption Standard"
+description: "E155 FPGA & MCU Lab"
+author: "Tiffany Nguyen"
+draft: false
+---

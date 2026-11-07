@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Tiffany Nguyen">
+<meta name="description" content="E155 Intro Lab">
 
-<title>lab1 – E155 Portfolio</title>
+<title>Lab 1: FPGA and MCU Setup and Testing – E155 Portfolio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +27,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -74,6 +111,35 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -122,17 +188,700 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#hardware" id="toc-hardware" class="nav-link active" data-scroll-target="#hardware">Hardware</a></li>
+  <li><a href="#verilog" id="toc-verilog" class="nav-link" data-scroll-target="#verilog">Verilog</a></li>
+  <li><a href="#simulation" id="toc-simulation" class="nav-link" data-scroll-target="#simulation">Simulation</a></li>
+  <li><a href="#schematic-and-block-diagrams" id="toc-schematic-and-block-diagrams" class="nav-link" data-scroll-target="#schematic-and-block-diagrams">Schematic and Block Diagrams</a></li>
+  <li><a href="#calculations" id="toc-calculations" class="nav-link" data-scroll-target="#calculations">Calculations</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#ai-reflection" id="toc-ai-reflection" class="nav-link" data-scroll-target="#ai-reflection">AI Reflection</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Lab 1: FPGA and MCU Setup and Testing</h1>
+</div>
+
+<div>
+  <div class="description">
+    E155 Intro Lab
+  </div>
+</div>
 
 
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Tiffany Nguyen </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<section id="hardware" class="level1">
+<h1>Hardware</h1>
+<p>A seven-segment display circuit is created to output a hexadecimal number given the user’s input via the on-board DIP switch. In this case, a common anode seven-segment display is used and is active-low, which means that “0” is treated as ON and “1” as OFF.</p>
+<p>For each of the seven cathode pins on the display, a current-limting resistor is placed in series before routing back to the pins. This then ensure that each segment falls safely within a 5-20 mA target for recommended operating conditions. There are also pull-up resistors used to avoid invalid logic levels and they are configured with the pins connected to s[3:0]. The iCE40 FPGA provides the internal pull-up resistors. On-board LEDs are also used for in relation to the switches and clock.</p>
+<p>The list of components used included:</p>
+<ul>
+<li>1x E155 kit materials</li>
+<li>1x Common Anode Seven-Segment Display (e.g.&nbsp;HDSP-511A, MAN6460, MAN6410)</li>
+<li>7x 220 ohms current-limiting resistors</li>
+</ul>
+<p>Resources used for hardware connections included:</p>
+<ul>
+<li><a href="https://hmc-e155.github.io/assets/doc/E155%20Development%20Board%20Schematic.pdf">E155 Development Board</a></li>
+<li><a href="https://hmc-e155.github.io/assets/doc/MAN64x0%20Series.pdf">MAN6400 Series Seven Segment Displays Datasheet</a> OR <a href="https://hmc-e155.github.io/assets/doc/AV02-2554EN_2024-07-10.pdf">HDSP Common Anode Seven-Segment Display Datasheet</a></li>
+</ul>
+</section>
+<section id="verilog" class="level1">
+<h1>Verilog</h1>
+<p>Lab 2 modules included “counter_logic,” “seven_segment_decoder,” and “lab1_tn” as the top-level module to tackle the challenge of creating a 7-segment display circuit with current-limting resistors and LED indictors.</p>
+<details>
+<summary>
+Reveal System Verilog Code: counter_logic Module
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*-----------------------------------------------------------------------------</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">* Author: Tiffany Nguyen</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">* Email: tiffnguyen@g.hmc.edu</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">* Date: September 4, 2026</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">* Purpose: A parameterized synchronous counter module used to track clock cycles up to a</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">* specified maximum value and toggle a signal at a desired frequency. Implemented in a single</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">* always_ff block with synchronous reset and enable controls to meet style specifications.</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">* Note: WIDTH and MAX_COUNT calculations from wanting flashing rate of the LED as  </span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">* 2.4 Hz in Lab 1.</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">-----------------------------------------------------------------------------*/</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">// # = used to pass or declare parameters (constants that customize size, latency, or behavior of module before it is instantiated/compiled)</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="ot">`timescale</span> <span class="dv">1</span> <span class="kw">ns</span>/<span class="dv">1</span> <span class="kw">ps</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> counter_logic #( </span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>   <span class="kw">parameter</span> <span class="kw">int</span> WIDTH  = <span class="dv">24</span>,  <span class="co">// Data bit-width of counter register</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>   <span class="kw">parameter</span> <span class="kw">int</span> MAX_COUNT = <span class="dv">9999999</span> <span class="co">// Parameter to specify max count values for counter module</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>)(</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>   <span class="kw">input</span>  <span class="kw">logic</span> clk,    <span class="co">// Internal high-frequency source clock</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>   <span class="kw">input</span>  <span class="kw">logic</span> reset_b,    <span class="co">// Synchronous active-high reset</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>   <span class="kw">input</span>  <span class="kw">logic</span> enable,     <span class="co">// Active-high count enable</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>   <span class="kw">output</span> <span class="kw">logic</span> [WIDTH<span class="dv">-1</span>:<span class="dv">0</span>] count, <span class="co">// Numerical counter value output</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>   <span class="kw">output</span> <span class="kw">logic</span> out_clk <span class="co">// Slow toggled output signal </span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Internal count tracking register</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>   <span class="kw">logic</span> [WIDTH<span class="dv">-1</span>:<span class="dv">0</span>] count_reg = '<span class="dv">0</span>;</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>   <span class="kw">logic</span> state_reg = <span class="bn">1'b0</span>;        </span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Single always_ff block to avoid inference of unintended latches</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>   <span class="kw">always_ff</span> @(<span class="kw">posedge</span> clk) <span class="kw">begin</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>       <span class="kw">if</span> (!reset_b) <span class="kw">begin</span> <span class="co">// Standard active-low configuration</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>           count_reg &lt;= '<span class="dv">0</span>;</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>           state_reg &lt;= <span class="bn">1'b0</span>;</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>       <span class="kw">end</span> <span class="kw">else</span> <span class="kw">if</span> (enable) <span class="kw">begin</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>           <span class="kw">if</span> (count_reg &gt;= MAX_COUNT) <span class="kw">begin</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>               count_reg   &lt;= '<span class="dv">0</span>; <span class="co">// MAX_COUNT feature sets counter back to 0 when counter reaches max value</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>               state_reg &lt;= ~state_reg; <span class="co">// Toggle the clock output pin by invert output state at terminal count</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>           <span class="kw">end</span> <span class="kw">else</span> <span class="kw">begin</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>               count_reg   &lt;= count_reg + <span class="bn">1'b1</span>;</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>           <span class="kw">end</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>       <span class="kw">end</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>   <span class="kw">end</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Expose structural state register status to output port</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  <span class="kw">assign</span> count = count_reg;</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="kw">assign</span> out_clk = state_reg;</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<details>
+<summary>
+Reveal System Verilog Code: seven_segment_decoder Module
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*-----------------------------------------------------------------------------</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">* Name:         Tiffany Nguyen</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">* Email:        tiffnguyen@g.hmc.edu</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">* Date:         September 4, 2026</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"> * Purpose: This module uses a combinational logic block to decode the 4-bit binary input </span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"> * s[3:0] into hex digits (0 to F). A common-anode 7-segment display is used, so segments are </span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"> * active-low (driving 0 turns the segment ON, 1 turns it OFF). Formatted with explicit case </span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"> * handling to eliminate latch inference.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"> * Let: seg[6:0] = {G, F, E, D, C, B, A} </span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"> * Logic behavior: 0 = ON, 1 = OFF </span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"> *---------------------------------------------------------------------------*/</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ot">`timescale</span> <span class="dv">1</span> <span class="kw">ns</span>/<span class="dv">1</span> <span class="kw">ps</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> seven_segment_decoder (</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>   <span class="kw">input</span>  <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] binary_input,  <span class="co">// 4-bit input from DIP switches  / 4-bit hexadecimal input value</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>   <span class="kw">output</span> <span class="kw">logic</span>  [<span class="dv">6</span>:<span class="dv">0</span>] seg_output  <span class="co">// Recall how letting seg[0] = A and seg[6] = G, so let [6:G, 5:F, 4:E, 3:D, 2:C, 1:B, 0:A]</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>   <span class="kw">always_comb</span> <span class="kw">begin</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>       <span class="kw">case</span> (binary_input)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>           <span class="co">// Common-Anode: 0 = Segment ON, 1 = Segment OFF</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>           <span class="co">// Bits: [6:0] seg -&gt; G F E D C B A based on on letting seg[6] be G and seg[0] be A in Fig. 1 of E155 Lab 1 instructions</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h0</span>: seg_output = <span class="bn">7'b1000000</span>; <span class="co">// ‘0’</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h1</span>: seg_output = <span class="bn">7'b1111001</span>; <span class="co">// ‘ 1’</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h2</span>: seg_output = <span class="bn">7'b0100100</span>; <span class="co">// ‘2’</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h3</span>: seg_output = <span class="bn">7'b0110000</span>; <span class="co">// ‘3’</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h4</span>: seg_output = <span class="bn">7'b0011001</span>; <span class="co">// ‘4’</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h5</span>: seg_output = <span class="bn">7'b0010010</span>; <span class="co">// ‘5’</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h6</span>: seg_output = <span class="bn">7'b0000010</span>; <span class="co">// ‘6’, Unique from b</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h7</span>: seg_output = <span class="bn">7'b1111000</span>; <span class="co">// ‘7’</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h8</span>: seg_output = <span class="bn">7'b0000000</span>; <span class="co">// ‘8’, Unique from b (All segments ON)</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'h9</span>: seg_output = <span class="bn">7'b0010000</span>; <span class="co">// ‘9’</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'hA</span>: seg_output = <span class="bn">7'b0001000</span>; <span class="co">// ‘A’</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'hb</span>: seg_output = <span class="bn">7'b0000011</span>; <span class="co">// Unique lowercase 'b' (to avoid looking like ‘6’ or ‘8’)</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'hC</span>: seg_output = <span class="bn">7'b1000110</span>; <span class="co">// ‘C’</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'hd</span>: seg_output = <span class="bn">7'b0100001</span>; <span class="co">// Unique lowercase ‘d’</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'hE</span>: seg_output = <span class="bn">7'b0000110</span>; <span class="co">// ‘E’</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>           <span class="bn">4'hF</span>: seg_output = <span class="bn">7'b0001110</span>; <span class="co">// ‘F’</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>           <span class="kw">default</span>: seg_output = <span class="bn">7'b1111111</span>; <span class="co">// All segments OFF</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>       <span class="kw">endcase</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>   <span class="kw">end</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<details>
+<summary>
+Reveal System Verilog Code: lab1_tn Module
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*-----------------------------------------------------------------------------</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">* Author: Tiffany Nguyen</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">* Email: tiffnguyen@g.hmc.edu</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">* Date: September 4, 2026</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">* Purpose: This top-level module implements the Lattice iCE40 HSOSC (High-Speed</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">* OSCillator) instantiated module, which outputs a structural 48 MHz clock signal internally.</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">* Only instantiated modules for 7-segment display decoder and a 2.4 Hz blink rate counter are</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">* used, along with switch-to-LED ‘assign’ logic for operating the physical board LEDs and</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">* switches.</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">-----------------------------------------------------------------------------*/</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ot">`timescale</span> <span class="dv">1</span> <span class="kw">ns</span>/<span class="dv">1</span> <span class="kw">ps</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> lab1_tn #(</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Default parameters map to 2.4 Hz physical board requirements (found in counter_logic.sv)</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>   <span class="kw">parameter</span> <span class="kw">int</span> TOP_WIDTH     = <span class="dv">24</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>   <span class="kw">parameter</span> <span class="kw">int</span> TOP_MAX_COUNT = <span class="dv">9999999</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>)(</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>   <span class="kw">input</span> <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] <span class="kw">s</span>,      <span class="co">// 4 DIP switches with s[3] = S3, s[2] = S2, s[1] = S1, s[0] = S0 (SW6)</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>   <span class="kw">input</span> <span class="kw">logic</span> reset_b, <span class="co">// Active low input that resets all sequential state, map it to a button on motherboard</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>   <span class="kw">output</span> <span class="kw">logic</span> [<span class="dv">2</span>:<span class="dv">0</span>] led,    <span class="co">// 3 On-board LEDs</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>   <span class="kw">output</span> <span class="kw">logic</span> [<span class="dv">6</span>:<span class="dv">0</span>] seg     <span class="co">// Common-anode 7-segment display segments (A to G)</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Internal timing logic nets</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>   <span class="kw">logic</span> clk_48mhz; <span class="co">// Internal clock signal generated by HSOSC primitive (48 MHz)</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>   <span class="kw">logic</span> led2_blink;  <span class="co">// Output from the counter block</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Create a dummy 24-bit net to capture the unused numerical count bus</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Note: helps avoid warning on code line with blink_counter instance, where count expects 24-bit wide vector bus since set TOP_WIDTH = 24</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>   <span class="kw">logic</span> [TOP_WIDTH<span class="dv">-1</span>:<span class="dv">0</span>] dummy_count;</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 1. === Instance of HSOSC internal chip cell primitive (48 MHz) ===</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Internal high-speed oscillator (copied from Lab 1 starter code’s top.sv but replaced “int_osc” with “clk_48mhz”)</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>   HSOSC hf_osc <span class="dt">(.CLKHFPU</span>(<span class="bn">1'b1</span>),<span class="dt"> .CLKHFEN</span>(<span class="bn">1'b1</span>),<span class="dt"> .CLKHF</span>(clk_48mhz));</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 2. === Continuous Switch-to-LED Assignment Tables ===</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Note: Corresponds to tables defining relationship of the LEDs to the switches and clk, but using logic gates and led[2] continuously blinking at 2.4 Hz</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assign</span> led[<span class="dv">0</span>] = <span class="kw">s</span>[<span class="dv">1</span>] ^ <span class="kw">s</span>[<span class="dv">0</span>]; <span class="co">// ON when S1 != S0 (XOR)</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assign</span> led[<span class="dv">1</span>] = <span class="kw">s</span>[<span class="dv">3</span>] &amp; <span class="kw">s</span>[<span class="dv">2</span>]; <span class="co">// ON only when S3 == 1 AND S2 == 1 (AND)</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assign</span> led[<span class="dv">2</span>] = led2_blink; <span class="co">// Driven by the 2.4 Hz clock divider </span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 3. === Sub-module Instantiation: 2.4 Hz Blink Counter ===</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>   counter_logic #(</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>       .WIDTH(TOP_WIDTH),</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>       .MAX_COUNT(TOP_MAX_COUNT) <span class="co">// Passes down the parameter from the top-level header</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>   ) blink_counter (</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>       .clk(clk_48mhz),</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>       .reset_b(reset_b),          <span class="co">// Hardcoded to constant active high so it counts continuous</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>       .enable(<span class="bn">1'b1</span>),           <span class="co">// Module permanently enabled / Hardcode constant active enable</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>       .count(dummy_count), <span class="co">// Connected to a matching 24-bit vector</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>       .out_clk(led2_blink) <span class="co">// Routed straight up to control led[2] (single-bit toggle wire)</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>   );</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>   <span class="co">// === 4. Sub-module Instantiation: 7-Segment Display Decoder ===</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>   seven_segment_decoder display_decoder (</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>       .binary_input(<span class="kw">s</span>),</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>       .seg_output(seg)</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>   );</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+<section id="simulation" class="level1">
+<h1>Simulation</h1>
+<p>Testbenches for the each of the modules were created and then simulated to evaluate code performance to expectations.</p>
+<p>For the counter module, it was tested for its reset, enable, and max count features.</p>
+<details>
+<summary>
+Reveal Testbench Code: tb_counter_logic
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*-----------------------------------------------------------------------------</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">* Author: Tiffany Nguyen</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">* Email: tiffnguyen@g.hmc.edu</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">* Date: September 6, 2026</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">* Purpose: A stim/assert testbench for the counter_logic module that does not need to cover all </span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">* possible states. However, a small parameter limit (e.g. MAX_COUNT = 4) is injected to </span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">* override runtime bounds and to verify if the reset, enable, and max count features are working</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">* correctly.</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">* Note: By aligning time delay increments directly to the clock period steps (e.g. #70, #20, #40, #80), can cleanly step through the state transitions without relying on sequential loop syntax</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">-----------------------------------------------------------------------------*/</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="ot">`timescale</span> <span class="dv">1</span> <span class="kw">ns</span>/<span class="dv">1</span> <span class="kw">ps</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> tb_counter_logic();</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> clk;         <span class="co">// Simulation system clock</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> reset_b;       <span class="co">// Active-high reset</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> enable;      <span class="co">// Active-high clock enable</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] count;  <span class="co">// Toggled output signal under test (Hardcoded as 4-bit wide vector tracking bus matching parameter when WIDTH = 4 for logic [WIDTH-1] count in counter_logic.sv)</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> out_clk;</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a> <span class="co">// Instantiate counter with small terminal count parameter for fast simulation</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a> counter_logic #(</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>     .WIDTH(<span class="dv">4</span>),</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>     .MAX_COUNT(<span class="dv">4</span>) <span class="co">// Shortened max limit to explicitly test rollback rule</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a> ) dut (</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>     .clk(clk),</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>     .reset_b(reset_b),</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>     .enable(enable),</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>     .count(count),</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>     .out_clk(out_clk)</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a> );</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a> <span class="co">// Generate simulation clock (50 MHz clock frequency -&gt; 20ns period)</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a> <span class="kw">always</span> <span class="kw">begin</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>     clk = <span class="dv">0</span>; <span class="bn">#10</span>;</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>     clk = <span class="dv">1</span>; <span class="bn">#10</span>;</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a> <span class="kw">end</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a> <span class="kw">initial</span> <span class="kw">begin</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>   <span class="kw">$display</span>(<span class="st">"[START] Verifying sequential counter sub-module behaviors..."</span>);</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 1. === Verify Active Reset Condition === </span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>   reset_b  = <span class="dv">0</span>; <span class="co">// Set to 0 for active-low reset tracking (since used if (!reset_b) in counter_logic.sv)</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>   enable = <span class="dv">1</span>;</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#25</span>; <span class="co">// Advance past the first active clock edge</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (count == <span class="bn">4'd0</span> &amp;&amp; out_clk == <span class="bn">1'b0</span>)</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Counter successfully held to zero during active reset."</span>);</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Counter failed reset initialization behavior. Got count=%d, out_clk=%b"</span>, count, out_clk);</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Deassert reset to begin tracking counts</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>   reset_b = <span class="dv">1</span>; <span class="co">// Set to 1 to let the counter increment (since used if (!reset_b) in counter_logic.sv)</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 2. === Verify Max Count Rollover Flag Toggle ===</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>   <span class="co">// To reach count = 4 and toggle on the 5th edge:</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Counts: Edge 1 (0-&gt;1), Edge 2 (1-&gt;2), Edge 3 (2-&gt;3), Edge 4 (3-&gt;0 and toggle)</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Since clock has a 20 ns period (10 ns low, 10 ns high), each full cycle takes exactly 20 ns. Waiting 4 cycles is equal to 80 ns delay -&gt; use #70 for explicit time delays for moving thru counter states</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#70</span>;</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (count == <span class="bn">4'd4</span>)</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Counter accurately incremented up to MAX_COUNT (4) and successfully toggled output register."</span>);</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Counter did not reach MAX_COUNT. Got: %d"</span>, count);</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Add 20 ns to step exactly 1 cycle forward to 115ns (just past the 5th edge at 110ns).</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>   <span class="co">// This edge triggers the rollover and toggles out_clk to 1.</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#25</span>;</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (count == <span class="bn">4'd0</span> &amp;&amp; out_clk == <span class="bn">1'b1</span>)</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Counter reached limit, rolled back to 0, and successfully toggled output clock register"</span>);</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Counter failed rollback or flag inversion."</span>);</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 3. === Verify Clock Enable Stalling functionality ===</span></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>   enable = <span class="dv">0</span>; <span class="co">// Freeze counter operation</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#40</span>;        <span class="co">// Wait two clock periods to prove data stays frozen</span></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (count == <span class="bn">4'd0</span> &amp;&amp; out_clk == <span class="bn">1'b1</span>)</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Counter ignored clock cycles while enable signal was held low."</span>);</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Counter updated state while enable was disabled."</span>);</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 4. === Verify Recovery and Continual Counting ===</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>   enable = <span class="dv">1</span>; <span class="co">// Unfreeze counter operation</span></span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#80</span>;        <span class="co">// Wait for next rollover cycle / Wait 4 more cycles (80ns) to reach MAX_COUNT again</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (count == <span class="bn">4'd4</span> &amp;&amp; out_clk == <span class="bn">1'b1</span>)</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Counter resumed counting and toggled state register back."</span>);</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Counter failed to resume accurate operation after re-enabling."</span>);</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Wait 1 more cycle (20ns) to see it roll back to 0 and pull out_clk back down to 0</span></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#20</span>;</span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (count == <span class="bn">4'd0</span> &amp;&amp; out_clk == <span class="bn">1'b0</span>)</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Counter resumed counting and toggled state register back down smoothly."</span>);</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Counter failed to complete continuous oscillation phase loop."</span>);</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#50</span> <span class="kw">$finish</span>;</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a> <span class="kw">end</span></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<details>
+<summary>
+Simulation Screenshots: tb_counter_logic
+</summary>
+<p><img src="images/e155_lab1_SIM_counter3.png" class="img-fluid"></p>
+</details>
+<p>For the seven-segment module, it was tested for all of the input-output pairs.</p>
+<details>
+<summary>
+Reveal Testbench Code: tb_seven_segment_decoder
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*-----------------------------------------------------------------------------</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">* Author: Tiffany Nguyen</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">* Email: tiffnguyen@g.hmc.edu</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">* Date: September 6, 2026</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">* Purpose:  An automated stim/assert testbench for seven_segment_decoder.sv (combinational</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">* module) that cycles through all 16 possible input combinational combinations of the DIP</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">* switches (all 16 input-output pairs) to verify complete combinational coverage.</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">-----------------------------------------------------------------------------*/</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="ot">`timescale</span> <span class="dv">1</span> <span class="kw">ns</span>/<span class="dv">1</span> <span class="kw">ps</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> tb_seven_segment_decoder();</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span>   [<span class="dv">3</span>:<span class="dv">0</span>]   binary_input;   <span class="co">// 4-bit binary input switch stimulus</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span>   [<span class="dv">6</span>:<span class="dv">0</span>]   seg_output;  <span class="co">// 7-bit active-low segment outputs</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a> <span class="co">// Instantiate the decoder under test</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a> seven_segment_decoder dut (</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>     .binary_input(binary_input),</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>     .seg_output(seg_output)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a> );</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a> <span class="co">// Golden reference patterns for validation: [G, F, E, D, C, B, A]</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> [<span class="dv">6</span>:<span class="dv">0</span>] reference_patterns [<span class="dv">0</span>:<span class="dv">15</span>] = '{</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b1000000</span>, <span class="co">// 0</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b1111001</span>, <span class="co">// 1</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0100100</span>, <span class="co">// 2</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0110000</span>, <span class="co">// 3</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0011001</span>, <span class="co">// 4</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0010010</span>, <span class="co">// 5</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0000010</span>, <span class="co">// 6</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b1111000</span>, <span class="co">// 7</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0000000</span>, <span class="co">// 8</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0010000</span>, <span class="co">// 9</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0001000</span>, <span class="co">// A</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0000011</span>, <span class="co">// b</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b1000110</span>, <span class="co">// C</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0100001</span>, <span class="co">// d</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0000110</span>, <span class="co">// E</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>     <span class="bn">7'b0001110</span>  <span class="co">// F</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a> };</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a> <span class="kw">initial</span> <span class="kw">begin</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>   <span class="kw">$display</span>(<span class="st">"[START] Beginning automated verification of all 16 decoder states..."</span>);</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>   <span class="kw">for</span> (<span class="kw">int</span> i = <span class="dv">0</span>; i &lt; <span class="dv">16</span>; i++) <span class="kw">begin</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>       binary_input = i[<span class="dv">3</span>:<span class="dv">0</span>]; <span class="co">// Apply input stimulus</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>       <span class="bn">#10</span>;             <span class="co">// Wait for combinational logic to propagate</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>       <span class="co">// Automated verification check</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>       <span class="kw">assert</span> (seg_output == reference_patterns[i])</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>           <span class="kw">$display</span>(<span class="st">"PASSED! Decoder output valid for input %h at time: %0t."</span>, binary_input, <span class="kw">$time</span>);</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>       <span class="kw">else</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>           <span class="kw">$error</span>(<span class="st">"FAILED! Decoder output incorrect for input %h at time: %0t. Got %b"</span>, binary_input, <span class="kw">$time</span>, seg_output, reference_patterns[i]);</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>   <span class="kw">end</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>   <span class="kw">$display</span>(<span class="st">"[SUCCESS] All 16 combinational input-output pairs verified."</span>);</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>   <span class="bn">#10</span> <span class="kw">$finish</span>;</span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a> <span class="kw">end</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<details>
+<summary>
+Simulation Screenshots: tb_seven_segment_decoder
+</summary>
+<p><img src="images/e155_lab1_SIM_seven_2.png" class="img-fluid"></p>
+</details>
+<p>For the top module, it was tested for proper connections to submodules, the HSOSC functionality, and whether assign 1 liner worked.</p>
+<details>
+<summary>
+Reveal Testbench Code: tb_lab1_tn
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*-----------------------------------------------------------------------------</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">* Author: Tiffany Nguyen</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">* Email: tiffnguyen@g.hmc.edu</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">* Date: September 6, 2026</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">*</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"> * Purpose: A testbench for E155 Lab 1 top-level module to verify behaviors that are not covered </span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"> * by the module-level simulations, such as determining whether the modules are wired together   </span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"> * correctly, if the HSOSC produces a clock, and whether the assign logic in the top-level module </span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"> * works. </span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"> * Recall that the top-level module generates its own clock, so the testbench should not drive </span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"> * one. </span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"> -----------------------------------------------------------------------------*/</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="ot">`timescale</span> <span class="dv">1</span> <span class="kw">ns</span>/<span class="dv">1</span> <span class="kw">ps</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> tb_lab1_tn();</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span>   [<span class="dv">3</span>:<span class="dv">0</span>]   <span class="kw">s</span>;    <span class="co">// 4-bit switch input vectors</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> reset_b;</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span>   [<span class="dv">2</span>:<span class="dv">0</span>]   led;  <span class="co">// 3-bit board level output LEDs</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span>   [<span class="dv">6</span>:<span class="dv">0</span>]   seg;  <span class="co">// 7-bit common-anode segments</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a> <span class="co">// Tracking flag used for automated sequential clock discovery</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> clock_detected;</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a> <span class="kw">logic</span> initial_blink_state;</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a> <span class="co">// Instantiate the complete top-level hardware design</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a> lab1_tn #(</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>     .TOP_WIDTH     (<span class="dv">4</span>),</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>     .TOP_MAX_COUNT (<span class="dv">4</span>)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a> ) dut (</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>     .<span class="kw">s</span>(<span class="kw">s</span>),</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>     .reset_b(reset_b),</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>     .led(led),</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>     .seg(seg)</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a> );</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a> <span class="kw">initial</span> <span class="kw">begin</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>   <span class="kw">$display</span>(<span class="st">"[START] Running top-level structural integration verification..."</span>);</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>   clock_detected = <span class="bn">1'b0</span>;</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Release reset condition to allow internal blocks to operate</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>   reset_b = <span class="dv">0</span>; <span class="bn">#20</span>;</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>   reset_b = <span class="dv">1</span>; <span class="bn">#10</span>;</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 1. === Verify Switch-to-LED Continuous Assign 1-Liners ===</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Test Case A: s = 4'b0000 (S1==S0 -&gt; led[0]=0 | S3,S2 not both high -&gt; led[1]=0)</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>   <span class="kw">s</span> = <span class="bn">4'b0000</span>; <span class="bn">#10</span>;</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (led[<span class="dv">1</span>:<span class="dv">0</span>] == <span class="bn">2'b00</span>)</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! 1-liner assignments correct for switch code 0000."</span>);</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Top-level assign logic error for switch code 0000."</span>);</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Test Case B: s = 4'b0001 (S1!=S0 -&gt; led[0]=1 | S3,S2 not both high -&gt; led[1]=0)</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>   <span class="kw">s</span> = <span class="bn">4'b0001</span>; <span class="bn">#10</span>;</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (led[<span class="dv">1</span>:<span class="dv">0</span>] == <span class="bn">2'b01</span>)</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! 1-liner assignments correct for switch code 0001."</span>);</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Top-level assign logic error for switch code 0001."</span>);</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Test Case C: s = 4'b1100 (S1==S0 -&gt; led[0]=0 | S3&amp;&amp;S2==1 -&gt; led[1]=1)</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>   <span class="kw">s</span> = <span class="bn">4'b1100</span>; <span class="bn">#10</span>;</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (led[<span class="dv">1</span>:<span class="dv">0</span>] == <span class="bn">2'b10</span>)</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! 1-liner assignments correct for switch code 1100."</span>);</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Top-level assign logic error for switch code 1100."</span>);</span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 2. === Verify Inter-Module Submodule Port Wiring ===</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Prove that assigning a value to 's' correctly routes into the</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>   <span class="co">// instantiation port of the 7-segment display decoder submodule.</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>   <span class="kw">s</span> = <span class="bn">4'b1111</span>; <span class="bn">#10</span>;</span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (seg == <span class="bn">7'b0001110</span>) <span class="co">// Expected active-low display hex pattern for 'F'</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Inter-module structural wiring connection to decoder is valid."</span>);</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Structural port mapping disconnected or corrupted to decoder."</span>);</span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>   <span class="co">// 3. === Sequential Validation of HSOSC Internal Clock ===</span></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Capture the initial state of the clock-driven LED</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>   initial_blink_state = led[<span class="dv">2</span>];</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>   <span class="kw">$display</span>(<span class="st">"[STAGE] Periodically sampling led[2] to verify internal HSOSC activity..."</span>);</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Periodically sample the register sequentially over a maximum timeout duration</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Loop steps forward. Since MAX_COUNT is now 4, it will toggle within ~5-10 cycles.</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>   <span class="kw">for</span> (<span class="kw">int</span> i = <span class="dv">0</span>; i &lt; <span class="dv">50</span>; i++) <span class="kw">begin</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>       <span class="bn">#20</span>; <span class="co">// Step forward in simulation time and past clock edges</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>       <span class="kw">if</span> (led[<span class="dv">2</span>] !== initial_blink_state &amp;&amp; led[<span class="dv">2</span>] !== <span class="bn">1'bx</span>) <span class="kw">begin</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>           clock_detected = <span class="bn">1'b1</span>;</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>           <span class="kw">break</span>; <span class="co">// Exit loop early once an edge transition is detected</span></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>       <span class="kw">end</span></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>   <span class="kw">end</span></span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>   <span class="co">// Automated sequential assertion</span></span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>   <span class="kw">assert</span> (clock_detected == <span class="bn">1'b1</span>)</span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$display</span>(<span class="st">"PASSED! Internal HSOSC primitive is functional and producing an active system clock."</span>);</span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>   <span class="kw">else</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>       <span class="kw">$error</span>(<span class="st">"FAILED! Simulation timeout reached. HSOSC primitive failed to produce a clock signal."</span>);</span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>   <span class="kw">$display</span>(<span class="st">"[SUCCESS] All top-level integration checks completed."</span>);</span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>   <span class="kw">$finish</span>;</span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a> <span class="kw">end</span></span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a><span class="co">//====FOR QUESTASIM: Addressing module 'HSOSC' is not defined error====</span></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> HSOSC #(</span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> CLKHF_DIV = <span class="st">"0b00"</span></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>)(</span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  CLKHFPU, <span class="co">// Power up signal</span></span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  CLKHFEN, <span class="co">// Enable signal</span></span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> CLKHF</span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Mimic the internal hardware clock (~24 MHz typical base frequency)</span></span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>    <span class="kw">initial</span> <span class="kw">begin</span></span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>        CLKHF = <span class="bn">1'b0</span>;</span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>        <span class="kw">forever</span> <span class="bn">#20</span><span class="fl">.83</span> CLKHF = ~CLKHF; </span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> VLO (</span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> O</span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> O = <span class="bn">1'b0</span>;</span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<details>
+<summary>
+Simulation Screenshots: tb_lab1_tn
+</summary>
+<p><img src="images/e155_lab1_SIM_top2.png" class="img-fluid"> <img src="images/e155_lab1_SIM_top3.png" class="img-fluid"></p>
+</details>
+</section>
+<section id="schematic-and-block-diagrams" class="level1">
+<h1>Schematic and Block Diagrams</h1>
+<p>With consideration of what pins are already used by the <a href="https://hmc-e155.github.io/assets/doc/E155%20Development%20Board%20Schematic.pdf">E155 Development Board</a>, the following schematic for the seven-segment display circuit includes the pins used for Lab 1.</p>
+<details>
+<summary>
+Lab 1 Schematic: Seven-Segment Display
+</summary>
+<p><a href="images/e155_lab1_schematics.pdf">View PDF</a></p>
+</details>
+<p>Block diagrams for each of the Lab 2 modules was created.</p>
+<details>
+<summary>
+Lab 1 Block Diagrams
+</summary>
+<p><a href="images/e155_lab1_block.pdf">View PDF</a></p>
+</details>
+</section>
+<section id="calculations" class="level1">
+<h1>Calculations</h1>
+<p>To demonstrate that the current draw for each segment in the seven-segment display is within the 5-20 mA recommended operating conditions, the following calculations were performed to choose the appropriate resistor.</p>
+<ol type="1">
+<li>Summarize relevant parameters and extract any additional electrical characteristics from the common anode seven-segment display’s datasheet.</li>
+</ol>
+<ul>
+<li>Supply voltage (<span class="math inline">\(V_{CC}\)</span>): 3.3V (supplied by the E155 Development Board power rail)</li>
+<li>Forward on-voltage (<span class="math inline">\(V_{ON}\)</span>): 2.1V typical (for HDSP series at <span class="math inline">\(I_{ON}\)</span> = 20 mA)</li>
+<li>Target current range: 5-20 mA</li>
+<li>Maximum DC forward current per segment or DP: 15 mA (safe operatoinal upper threshold)</li>
+</ul>
+<ol start="2" type="1">
+<li>Use Ohm’s Law to derive the resistance value to use in the 7-segment display (<span class="math inline">\(R_{SEG}\)</span>) for each individual cathode path.</li>
+</ol>
+<ul>
+<li>Voltage drop across the resistor: <span class="math inline">\(V_R\)</span> = <span class="math inline">\(V_{CC}\)</span> - <span class="math inline">\(V_{ON}\)</span> = 3.3V - 2.1V = 1.2V</li>
+<li>Ohm’s Law to find <span class="math inline">\(R_{SEG}\)</span>: <span class="math inline">\(R = \frac{V_R}{5 mA} = \frac{1.2V}{0.005 A}\)</span> = 240 <span class="math inline">\(\Omega\)</span>, which has the closest standard resistor value as 220 <span class="math inline">\(\Omega\)</span></li>
+</ul>
+<ol start="3" type="1">
+<li>Check if <span class="math inline">\(R_{SEG}\)</span> is within the safe current operating range of 5-20 mA by using Ohm’s Law.</li>
+</ol>
+<ul>
+<li><span class="math inline">\(I_{SEG} = \frac{V_R}{R_{SEG}} = \frac{1.2V}{220 \Omega} \approx 0.00545 A = 5.45 mA\)</span></li>
+</ul>
+<p>To demonstrate that the flashing rate of the LED is 2.4 Hz, calculations that starts with the target physical behavior and ends with the number of clock cycles needed to achieve it based on the FPGA’s hardware speed were performed.</p>
+<ol type="1">
+<li>Find the time needed for 1 full blink cycle.</li>
+</ol>
+<ul>
+<li><span class="math inline">\(T = \frac{1}{f} = \frac{1}{2.4 Hz} \approx 0.416667 seconds\)</span></li>
+</ul>
+<ol start="2" type="1">
+<li>Find the half-period (toggle interval).</li>
+</ol>
+<ul>
+<li>For digital hardware, a counter typically controls a signal by toggling it (changing a 0 to 1, or a 1 to a 0). Because a signal toggles twice per full cycle (once to go high, once to go low), need to find the half-period time (<span class="math inline">\(t_{toggle}\)</span>).</li>
+<li><span class="math inline">\(t_{toggle} = \frac{T}{2} = \frac{0.416667 seconds}{2} \approx\)</span> 0.208333 seconds</li>
+<li>The counter must then trigger a change of state about every 20 seconds.</li>
+</ul>
+<ol start="3" type="1">
+<li>Convert time into clock cycles.</li>
+</ol>
+<ul>
+<li>Given from the E155 Lab 1 instructions, there is a <span class="math inline">\(f_{clk}\)</span> = 48 MHz clock that is generated inside the FPGA by the HSOSC primitive and it ticks 48,000,000 times per second.</li>
+<li>Total Clock Cycles = <span class="math inline">\(t_{toggle} \times f_{clk} = 0.208333 seconds \times 48,000,000 Hz = 10,000,000\)</span> cycles</li>
+</ul>
+<ol start="4" type="1">
+<li>Determine the final counter value for coding.</li>
+</ol>
+<ul>
+<li>Since digital counters in hardware are 0-indexed, the max count limit (MAX COUNT) must be exactly 1 less than the total number of cycles needed.</li>
+<li>MAX COUNT = Total Clock Cycles - 1 = 10,000,000 - 1 = 9,999,999</li>
+<li>So, MAX COUNT in Verilog code is equal to 9,999,999.</li>
+</ul>
+<ol start="5" type="1">
+<li>Determine the size of the hardware register.</li>
+</ol>
+<ul>
+<li>Before coding, it is important to know how many bits wide the counter register must be to hold the MAX_COUNT number safely without overflowing early. This can be done by considering the smallest power of <span class="math inline">\(2^N\)</span> that is greater than or equal to MAX_COUNT. In this case, it is <span class="math inline">\(2^{24}\)</span>.</li>
+<li>So, WIDTH = 24 for a 24-bit wide counter is needed to implement the counter logic for led[2] to blink at a flashing rate of 2.4 Hz.</li>
+</ul>
+</section>
+<section id="conclusion" class="level1">
+<h1>Conclusion</h1>
+<p>Number of hours spent working on the lab: at least 20 hours</p>
+<p>By the end of the hours worked, the design requirements were all met to a certain extent. Learning challenges along the way included how to use Lattice Radiant and hardware connections.</p>
+</section>
+<section id="ai-reflection" class="level1">
+<h1>AI Reflection</h1>
+<p>After inputting the given AI-generated code into Lattice Radiant, it did not generate SystemVerilog that compiles and synthesizes. The code itself included a section for toggling the LED every quarter second, using the iCE40 UltraPlus internal high-frequency oscillator, and a flip-flop. However, it outputted a warning and an error for an unknown instantiating module ‘SB_HFOSC,’ but also a critical error that a top-level module was not specified.</p>
+<p>I would then rate the output as a 4/10 because it was able to get certain parts in the code that makes sense. However, if a user wanted a successful coded that immediately works, then the AI-generated code failed in the synthesis phase. A part of the generated code that was new to me is the code using a HFOSC instead of a HSOSC for the Lattice UP5K FPGA internal high-frequency oscillator.</p>
+<details>
+<summary>
+AI-generated Results for Prompt
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> led_blink #(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> <span class="kw">int</span> <span class="kw">unsigned</span> CLK_FREQ_HZ = <span class="dv">48</span>_000_000,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> <span class="kw">int</span> <span class="kw">unsigned</span> BLINK_HZ    = <span class="dv">2</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>) (</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> led</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Toggle the LED every quarter second:</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 48 MHz / (2 * 2 Hz) = 12,000,000 clocks per toggle.</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">localparam</span> <span class="kw">int</span> <span class="kw">unsigned</span> HALF_PERIOD =</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        CLK_FREQ_HZ / (<span class="dv">2</span> * BLINK_HZ);</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// $clog2() gives enough bits to represent HALF_PERIOD-1.</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">localparam</span> <span class="kw">int</span> <span class="kw">unsigned</span> COUNTER_WIDTH =</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">$clog2</span>(HALF_PERIOD);</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> clk_hf;</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [COUNTER_WIDTH<span class="dv">-1</span>:<span class="dv">0</span>] counter;</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Lattice iCE40 UltraPlus internal high-frequency oscillator.</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// CLKHF_DIV = 2'b00 -&gt; nominal 48 MHz.</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    SB_HFOSC #(</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        .CLKHF_DIV(<span class="st">"0b00"</span>)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    ) hf_osc (</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>        .CLKHFPU(<span class="bn">1'b1</span>),  <span class="co">// Power up oscillator</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>        .CLKHFEN(<span class="bn">1'b1</span>),  <span class="co">// Enable oscillator output</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        .CLKHF  (clk_hf)</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">always_ff</span> @(<span class="kw">posedge</span> clk_hf) <span class="kw">begin</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> (counter == HALF_PERIOD - <span class="dv">1</span>) <span class="kw">begin</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>            counter &lt;= '<span class="dv">0</span>;</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>            led     &lt;= ~led;</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="kw">begin</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>            counter &lt;= counter + <span class="bn">1'b1</span>;</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+
+
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
